@@ -1,0 +1,41 @@
+{
+  "model": "claude-opus-4-6",
+  "permissions": {
+    "allow": [
+      "Bash(pandoc *)",
+      "Bash(curl *)",
+      "Bash(pdftotext *)",
+      "Bash(mkdir *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(brew install *)",
+      "Bash(npx playwright install *)",
+      "Bash(./scripts/lint-report.sh *)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_handle_dialog",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_type"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "REPORT=$(find output -name 'report.md' -mmin -1 2>/dev/null | head -1); if [ -n \"$REPORT\" ]; then ./scripts/lint-report.sh \"$REPORT\"; fi",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}

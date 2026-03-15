@@ -12,13 +12,27 @@ The core insight: **the quality of an AI agent is determined by what it refuses 
 
 ## Agents
 
+### Installable (user-level)
+
+These agents install into `~/.claude/` via symlinks and are available as subagents in any Claude Code session.
+
 | Agent | What It Does | Key Engineering Decisions |
 |---|---|---|
 | **context-distiller** | Distills any codebase into a single 30-50K token `.md` file for handoff to external AI agents without CLI access | Token budget derived from [GPT-5.4 context degradation research](https://help.apiyi.com/en/gpt-5-4-1m-context-272k-pricing-threshold-performance-guide-en.html) — retrieval holds at 256K but reasoning degrades earlier. 5-phase workflow with purpose confirmation gate. 4-tier file importance heuristic. Credential detection via pattern matching + content analysis. |
 
+### Standalone
+
+Self-contained workspace agents in `standalone/`. Clone the repo, `cd` into the agent directory, and run `claude`.
+
+| Agent | What It Does |
+|---|---|
+| **deep-researcher** | Exhaustively investigates any topic using web sources and produces structured reports with inline citations in `.md`, `.pdf`, and `.docx` formats |
+
 ## Agent Architecture
 
-Each agent consists of two layers:
+This repo ships two types of agents:
+
+**Installable agents** use a two-layer structure:
 
 ```
 agents/[name].md          # System prompt: identity, constraints, budget rules,
@@ -29,6 +43,17 @@ skills/[name]-[skill]/    # Execution logic: step-by-step workflow, heuristics,
 ```
 
 The separation matters: the agent definition sets **what** and **why** (loaded every session), while skills define **how** (loaded on demand). This mirrors the infrastructure pattern of separating configuration from execution logic.
+
+**Standalone agents** are self-contained workspaces with their own `CLAUDE.md`, skills, docs, and tooling:
+
+```
+standalone/[name]/
+    CLAUDE.md             # Agent instructions (loaded automatically by Claude Code)
+    skills/               # Skill definitions
+    docs/                 # Reference material and knowledge
+    evals/                # Test cases and validation criteria
+    setup.sh              # Dependency installation
+```
 
 ## Engineering Process
 
@@ -96,10 +121,12 @@ The context-distiller's approach:
 
 ## Install
 
+### Installable agents
+
 ```bash
 git clone https://github.com/leonbeckert/claude-agents.git ~/claude-agents
 
-# Install all agents
+# Install all installable agents
 ~/claude-agents/install.sh
 
 # Install a specific agent
@@ -108,18 +135,20 @@ git clone https://github.com/leonbeckert/claude-agents.git ~/claude-agents
 
 The install script symlinks agent definitions and skills into `~/.claude/`. Your existing Claude Code configuration is not modified — symlinks are additive.
 
-## Usage
-
 Once installed, agents are available as subagents in any Claude Code session:
 
 ```
 > Use the context-distiller agent to distill this project, focus on the API layer
 ```
 
-```
-> Delegate to context-distiller: distill ~/my-project, skip tests and docs
+### Standalone agents
+
+```bash
+cd ~/claude-agents/standalone/deep-researcher
+./setup.sh   # install dependencies (first time only)
+claude        # start the agent
 ```
 
 ## Built With
 
-These agents are produced by [Agent Factory](https://github.com/leonbeckert/agent-factory) — a meta-agent that engineers specialized Claude Code agents through structured phases with evaluation gates and failure-first design.
+These agents are produced by [agentspawn](https://github.com/leonbeckert/agentspawn) — a meta-agent that engineers specialized Claude Code agents through structured phases with evaluation gates and failure-first design.
